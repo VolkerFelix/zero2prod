@@ -2,6 +2,9 @@ use actix_web::{web, HttpResponse};
 use sqlx::{PgPool};
 use uuid::Uuid;
 use chrono::Utc;
+use unicode_segmentation::UnicodeSegmentation;
+
+use crate::domain::{NewSubscriber, SubscriberName};
 
 #[derive(serde::Deserialize)]
 pub struct FormData {
@@ -22,7 +25,12 @@ pub async fn subscribe(
     f_pool: web::Data<PgPool>
 ) -> HttpResponse {
 
-    match insert_subscriber(&f_pool, &f_form).await
+    let new_subscriber = NewSubscriber {
+        email: f_form.0.email,
+        name: SubscriberName::parse(f_form.0.name),
+    };
+
+    match insert_subscriber(&f_pool, &new_subscriber).await
     {
         Ok(_) => HttpResponse::Ok ().finish(),
         Err(_) => HttpResponse:: InternalServerError().finish()
@@ -32,11 +40,11 @@ pub async fn subscribe(
 
 #[tracing::instrument(
     name = "Saving new subscriber details in the database.",
-    skip(f_form, f_pool)
+    skip(f_new_subscriber, f_pool)
 )]
 pub async fn insert_subscriber(
     f_pool: &PgPool,
-    f_form: &FormData,
+    f_new_subscriber: &NewSubscriber,
 ) -> Result<(), sqlx::Error> {
 
     sqlx::query!(
@@ -45,8 +53,8 @@ pub async fn insert_subscriber(
         VALUES ($1, $2, $3, $4)
         "#,
         Uuid::new_v4(),
-        f_form.email,
-        f_form.name,
+        f_new_subscriber.email,
+        f_new_subscriber.name.as_ref(),
         Utc::now()
     )
     .execute(f_pool)
