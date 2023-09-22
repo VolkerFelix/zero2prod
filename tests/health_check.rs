@@ -51,7 +51,7 @@ async fn spawn_app() -> TestApp {
     let address = format!("http://127.0.0.1:{}", port);
 
     let mut config = get_configuration().expect("Failed to read configuration.");
-    config.database.database_name = Uuid:: new_v4().to_string();
+    config.database.database_name = Uuid::new_v4().to_string();
 
     let connection_pool = configure_database(&config.database).await;
 
@@ -69,18 +69,17 @@ async fn spawn_app() -> TestApp {
 
 pub async fn configure_database(f_config: &DatabaseSettings) -> PgPool {
     // Create database
-    let mut connection = PgConnection::connect_with(
-        &f_config.without_db())
+    let mut connection = PgConnection::connect_with(&f_config.without_db())
         .await
         .expect("Failed to connect to Postgres.");
 
     connection
-        .execute(format!(r#"CREATE DATABASE "{}";"#, f_config.database_name).as_str())
+        .execute(&*format!(r#"CREATE DATABASE "{}";"#, f_config.database_name))
         .await
         .expect("Failed to create database.");
 
     // Migrate database
-    let connection_pool = PgPool::connect_with(f_config.without_db())
+    let connection_pool = PgPool::connect_with(f_config.with_db())
         .await
         .expect("Failed to connect to Postgres.");
 
