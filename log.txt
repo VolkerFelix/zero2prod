@@ -1,2 +1,0 @@
-ID                                      Spec Name    Default Ingress                               Active Deployment ID                    In Progress Deployment ID    Created At                       Updated At
-01ce8545-c808-4fa9-a496-c21655f3ff02    zero2prod    https://zero2prod-cq8j8.ondigitalocean.app    779066fe-1744-41f0-94b6-6bfd0d7e73d3                                 2023-09-22 11:21:35 +0000 UTC    2023-09-22 14:11:15 +0000 UTC
