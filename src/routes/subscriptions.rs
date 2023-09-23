@@ -4,12 +4,22 @@ use uuid::Uuid;
 use chrono::Utc;
 use unicode_segmentation::UnicodeSegmentation;
 
-use crate::domain::{NewSubscriber, SubscriberName};
+use crate::domain::{NewSubscriber, SubscriberName, SubscriberEmail};
 
 #[derive(serde::Deserialize)]
 pub struct FormData {
     email: String,
     name: String
+}
+
+impl TryFrom<FormData> for NewSubscriber {
+    type Error = String;
+
+    fn try_from(value: FormData) -> Result<Self, Self::Error> {
+        let name = SubscriberName::parse(value.name)?;
+        let email = SubscriberEmail::parse(value.email)?;
+        Ok(Self { email, name })
+    }
 }
 
 #[tracing::instrument(
@@ -25,10 +35,10 @@ pub async fn subscribe(
     f_pool: web::Data<PgPool>
 ) -> HttpResponse {
 
-    let new_subscriber = NewSubscriber {
-        email: f_form.0.email,
-        name: SubscriberName::parse(f_form.0.name),
-    };
+    let new_subscriber = match f_form.0.try_into() {
+        Ok(form) => form,
+        Err(_) => return HttpResponse::BadRequest().finish(),
+    };	
 
     match insert_subscriber(&f_pool, &new_subscriber).await
     {
@@ -53,7 +63,7 @@ pub async fn insert_subscriber(
         VALUES ($1, $2, $3, $4)
         "#,
         Uuid::new_v4(),
-        f_new_subscriber.email,
+        f_new_subscriber.email.as_ref(),
         f_new_subscriber.name.as_ref(),
         Utc::now()
     )
