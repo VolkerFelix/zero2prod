@@ -2,3 +2,11 @@ application:
   host: 0.0.0.0
 database:
   require_ssl: true
+email_client:
+  # Value retrieved from Postmark's API documentation
+  base_url: "https://us21.api.mailchimp.com/3.0/"
+  # Use the single sender email you authorised on Postmark!
+  sender_email: "something@gmail.com"
+  # Mailchimp API key: e3064fb46a2e3fbdc74f1a121c867a2d-us21
+
+  # curl -sS https://us21.api.mailchimp.com/3.0/ping" --user "anystring:e3064fb46a2e3fbdc74f1a121c867a2d-us21" | jq -r
